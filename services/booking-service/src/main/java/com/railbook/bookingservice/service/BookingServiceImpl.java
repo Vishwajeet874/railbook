@@ -1,5 +1,7 @@
 package com.railbook.bookingservice.service;
 
+import com.railbook.bookingservice.client.TrainServiceClient;
+import com.railbook.bookingservice.client.UserServiceClient;
 import com.railbook.bookingservice.dto.BookingResponse;
 import com.railbook.bookingservice.dto.CreateBookingRequest;
 import com.railbook.bookingservice.entity.Booking;
@@ -19,13 +21,51 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
 
+    private final UserServiceClient userServiceClient;
+    private final TrainServiceClient trainServiceClient;
+
     @Override
     @Transactional
-    public BookingResponse createBooking(CreateBookingRequest r) {
-        boolean booked = bookingRepository.existsByTrainIdAndJourneyDateAndSeatNumberAndStatus(r.trainId(), r.journeyDate(), r.seatNumber(), BookingStatus.CONFIRMED);
-        if (booked) throw new SeatAlreadyBookedException("Seat " + r.seatNumber() + " is already booked for train " + r.trainId() + " on " + r.journeyDate());
-        Booking b = Booking.builder().userId(r.userId()).trainId(r.trainId()).journeyDate(r.journeyDate()).passengerName(r.passengerName()).passengerAge(r.passengerAge()).seatNumber(r.seatNumber()).status(BookingStatus.CONFIRMED).build();
-        return toResponse(bookingRepository.save(b));
+    public BookingResponse createBooking(
+            CreateBookingRequest request) {
+
+        // 1. Validate user
+        userServiceClient.getUser(request.userId());
+
+        // 2. Validate train
+        trainServiceClient.getTrain(request.trainId());
+
+        // 3. Check seat
+        boolean seatBooked =
+                bookingRepository
+                        .existsByTrainIdAndJourneyDateAndSeatNumberAndStatus(
+                                request.trainId(),
+                                request.journeyDate(),
+                                request.seatNumber(),
+                                BookingStatus.CONFIRMED
+                        );
+
+        if (seatBooked) {
+            throw new SeatAlreadyBookedException(
+                    "Seat " + request.seatNumber()
+                            + " is already booked"
+            );
+        }
+
+        // 4. Create booking
+        Booking booking = Booking.builder()
+                .userId(request.userId())
+                .trainId(request.trainId())
+                .journeyDate(request.journeyDate())
+                .passengerName(request.passengerName())
+                .passengerAge(request.passengerAge())
+                .seatNumber(request.seatNumber())
+                .status(BookingStatus.CONFIRMED)
+                .build();
+
+        return toResponse(
+                bookingRepository.save(booking)
+        );
     }
 
     public BookingResponse getBooking(Long id) {

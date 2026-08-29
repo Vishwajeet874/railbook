@@ -30,10 +30,38 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ValidationErrorResponse(LocalDateTime.now(), 400, "VALIDATION_FAILED", m));
     }
 
-    public record ApiError(LocalDateTime timestamp, int status, String error, String message, String path) {
+    @ExceptionHandler(UserServiceException.class)
+    public ResponseEntity<ApiError> handleUserServiceException(
+            UserServiceException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError(
+                        LocalDateTime.now(),
+                        404,
+                        "USER_NOT_FOUND",
+                        ex.getMessage(),
+                        request.getRequestURI()
+                ));
     }
 
-    public record ValidationErrorResponse(LocalDateTime timestamp, int status, String error,
-                                          Map<String, String> fields) {
+    @ExceptionHandler(TrainServiceException.class)
+    public ResponseEntity<ApiError> handleTrainServiceException(
+            TrainServiceException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError(
+                        LocalDateTime.now(),
+                        404,
+                        "TRAN_NOT_FOUND",
+                        ex.getMessage(),
+                        request.getRequestURI()
+                ));
     }
+
+    public record ApiError(LocalDateTime timestamp, int status, String error, String message, String path) {}
+
+    public record ValidationErrorResponse(LocalDateTime timestamp, int status, String error,
+                                          Map<String, String> fields) {}
 }
