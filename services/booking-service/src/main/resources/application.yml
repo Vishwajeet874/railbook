@@ -19,10 +19,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
+  health:
+    circuit-breakers:
+      enabled: true
 
 services:
   train-service:
@@ -30,3 +33,52 @@ services:
 
   user-service:
     url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      user-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException.NotFound
+      train-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException.NotFound
+    circuit-breaker-aspect-order: 1
+
+  retry:
+    instances:
+      user-service:
+        maxAttempts: 3            # Total calls (1 initial + 2 retries)
+        waitDuration: 1s          # Wait 1s between attempts
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2 # 1st retry after 1s, 2nd retry after 2s
+        retryExceptions:
+          - org.springframework.web.client.RestClientException
+          - java.io.IOException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException.NotFound
+      train-service:
+        maxAttempts: 3            # Total calls (1 initial + 2 retries)
+        waitDuration: 1s          # Wait 1s between attempts
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2 # 1st retry after 1s, 2nd retry after 2s
+        retryExceptions:
+          - org.springframework.web.client.RestClientException
+          - java.io.IOException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException.NotFound
+    retry-aspect-order: 2

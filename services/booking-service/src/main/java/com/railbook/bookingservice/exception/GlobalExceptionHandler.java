@@ -60,6 +60,36 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(UserServiceUnavailableException.class)
+    public ResponseEntity<ApiError> handleUserServiceUnavailableException(
+            UserServiceUnavailableException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiError(
+                        LocalDateTime.now(),
+                        HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        "USER_SERVICE_UNAVAILABLE",
+                        ex.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(TrainServiceUnavailableException.class)
+    public ResponseEntity<ApiError> handleTrainServiceUnavailableException(
+            TrainServiceUnavailableException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiError(
+                        LocalDateTime.now(),
+                        HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        "TRAIN_SERVICE_UNAVAILABLE",
+                        ex.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
     public record ApiError(LocalDateTime timestamp, int status, String error, String message, String path) {}
 
     public record ValidationErrorResponse(LocalDateTime timestamp, int status, String error,
