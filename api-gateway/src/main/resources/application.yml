@@ -13,17 +13,121 @@ spring:
               uri: http://localhost:8081
               predicates:
                 - Path=/api/users/**
+              filters:
+                # 2. CIRCUIT BREAKER SECOND
+                - name: CircuitBreaker
+                  args:
+                    name: userServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/user-service
+                # 1. RETRY FILTER FIRST
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR
+                    methods: GET, POST
+                    # Explicitly catch connection failures when the microservice is offline
+                    exceptions:
+                      - java.net.ConnectException
+                      - io.netty.channel.AbstractChannel$AnnotatedConnectException
+                      - java.io.IOException
+                    backoff:
+                      firstBackoff: 100ms
+                      maxBackoff: 1s
+                      factor: 2
+                      basedOnPreviousValue: true
+
             - id: train-service
               uri: http://localhost:8082
               predicates:
                 - Path=/api/trains/**
+              filters:
+                # 2. CIRCUIT BREAKER SECOND
+                - name: CircuitBreaker
+                  args:
+                    name: trainServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/train-service
+                # 1. RETRY FILTER FIRST
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR
+                    methods: GET, POST
+                    # Explicitly catch connection failures when the microservice is offline
+                    exceptions:
+                      - java.net.ConnectException
+                      - io.netty.channel.AbstractChannel$AnnotatedConnectException
+                      - java.io.IOException
+                    backoff:
+                      firstBackoff: 100ms
+                      maxBackoff: 1s
+                      factor: 2
+                      basedOnPreviousValue: true
+
             - id: booking-service
               uri: http://localhost:8083
               predicates:
                 - Path=/api/bookings/**
+              filters:
+                # 2. CIRCUIT BREAKER SECOND
+                - name: CircuitBreaker
+                  args:
+                    name: bookingServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/booking-service
+                # 1. RETRY FILTER FIRST
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR
+                    methods: GET, POST
+                    # Explicitly catch connection failures when the microservice is offline
+                    exceptions:
+                      - java.net.ConnectException
+                      - io.netty.channel.AbstractChannel$AnnotatedConnectException
+                      - java.io.IOException
+                    backoff:
+                      firstBackoff: 100ms
+                      maxBackoff: 1s
+                      factor: 2
+                      basedOnPreviousValue: true
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,gateway
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      trainServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      userServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      bookingServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+      # Shows low-level HTTP requests and TCP connection retries
+#    reactor.netty.http.client: DEBUG
