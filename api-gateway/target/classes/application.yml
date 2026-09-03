@@ -10,7 +10,7 @@ spring:
         webflux:
           routes:
             - id: user-service
-              uri: http://localhost:8081
+              uri: lb://USER-SERVICE
               predicates:
                 - Path=/api/users/**
               filters:
@@ -37,7 +37,7 @@ spring:
                       basedOnPreviousValue: true
 
             - id: train-service
-              uri: http://localhost:8082
+              uri: lb://TRAIN-SERVICE
               predicates:
                 - Path=/api/trains/**
               filters:
@@ -64,7 +64,7 @@ spring:
                       basedOnPreviousValue: true
 
             - id: booking-service
-              uri: http://localhost:8083
+              uri: lb://BOOKING-SERVICE
               predicates:
                 - Path=/api/bookings/**
               filters:
