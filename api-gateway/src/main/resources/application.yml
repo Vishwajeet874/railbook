@@ -131,3 +131,7 @@ logging:
     org.springframework.cloud.gateway: TRACE
       # Shows low-level HTTP requests and TCP connection retries
 #    reactor.netty.http.client: DEBUG
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
