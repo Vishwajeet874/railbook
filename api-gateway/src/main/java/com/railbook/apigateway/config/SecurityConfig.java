@@ -18,7 +18,7 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         // Public auth endpoints
-                        .pathMatchers("/api/users/login", "/api/users/register").permitAll()
+                        .pathMatchers(HttpMethod.POST,"/api/users/login", "/api/users/register").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/trains/**").permitAll()
 
                         // Protected role endpoints

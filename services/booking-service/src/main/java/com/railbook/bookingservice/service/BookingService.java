@@ -6,11 +6,23 @@ import com.railbook.bookingservice.dto.CreateBookingRequest;
 import java.util.List;
 
 public interface BookingService {
-    BookingResponse createBooking(CreateBookingRequest request);
 
-    BookingResponse getBooking(Long id);
+    BookingResponse createBooking(
+            String keycloakUserId,
+            CreateBookingRequest request
+    );
 
-    List<BookingResponse> getBookingsByUser(Long userId);
+    BookingResponse getBooking(
+            Long id,
+            String keycloakUserId
+    );
 
-    void cancelBooking(Long id);
+    List<BookingResponse> getBookingsByUser(
+            String keycloakUserId
+    );
+
+    void cancelBooking(
+            Long id,
+            String keycloakUserId
+    );
 }

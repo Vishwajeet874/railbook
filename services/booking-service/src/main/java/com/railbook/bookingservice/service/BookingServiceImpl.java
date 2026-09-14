@@ -1,7 +1,6 @@
 package com.railbook.bookingservice.service;
 
 import com.railbook.bookingservice.client.TrainServiceClient;
-import com.railbook.bookingservice.client.UserServiceClient;
 import com.railbook.bookingservice.dto.BookingResponse;
 import com.railbook.bookingservice.dto.CreateBookingRequest;
 import com.railbook.bookingservice.entity.Booking;
@@ -19,23 +18,22 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
+
     private final BookingRepository bookingRepository;
 
-    private final UserServiceClient userServiceClient;
     private final TrainServiceClient trainServiceClient;
+
 
     @Override
     @Transactional
     public BookingResponse createBooking(
+            String keycloakUserId,
             CreateBookingRequest request) {
 
-        // 1. Validate user
-        userServiceClient.getUser(request.userId());
-
-        // 2. Validate train
+        // 1. Validate train
         trainServiceClient.getTrain(request.trainId());
 
-        // 3. Check seat
+        // 2. Check whether seat is already booked
         boolean seatBooked =
                 bookingRepository
                         .existsByTrainIdAndJourneyDateAndSeatNumberAndStatus(
@@ -52,9 +50,9 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
-        // 4. Create booking
+        // 3. Create booking
         Booking booking = Booking.builder()
-                .userId(request.userId())
+                .keycloakUserId(keycloakUserId)
                 .trainId(request.trainId())
                 .journeyDate(request.journeyDate())
                 .passengerName(request.passengerName())
@@ -63,28 +61,71 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatus.CONFIRMED)
                 .build();
 
+        // 4. Save
         return toResponse(
                 bookingRepository.save(booking)
         );
     }
 
-    public BookingResponse getBooking(Long id) {
-        return bookingRepository.findById(id).map(this::toResponse).orElseThrow(() -> new BookingNotFoundException(id));
+
+    @Override
+    public BookingResponse getBooking(
+            Long id,
+            String keycloakUserId) {
+
+        return bookingRepository
+                .findByIdAndKeycloakUserId(id, keycloakUserId)
+                .map(this::toResponse)
+                .orElseThrow(
+                        () -> new BookingNotFoundException(id)
+                );
     }
 
-    public List<BookingResponse> getBookingsByUser(Long userId) {
-        return bookingRepository.findByUserId(userId).stream().map(this::toResponse).toList();
+
+    @Override
+    public List<BookingResponse> getBookingsByUser(
+            String keycloakUserId) {
+
+        return bookingRepository
+                .findByKeycloakUserId(keycloakUserId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
+
 
     @Override
     @Transactional
-    public void cancelBooking(Long id) {
-        Booking b = bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
-        b.setStatus(BookingStatus.CANCELLED);
-        bookingRepository.save(b);
+    public void cancelBooking(
+            Long id,
+            String keycloakUserId) {
+
+        Booking booking =
+                bookingRepository
+                        .findByIdAndKeycloakUserId(
+                                id,
+                                keycloakUserId
+                        )
+                        .orElseThrow(
+                                () -> new BookingNotFoundException(id)
+                        );
+
+        booking.setStatus(BookingStatus.CANCELLED);
+
+        bookingRepository.save(booking);
     }
 
-    private BookingResponse toResponse(Booking b) {
-        return new BookingResponse(b.getId(), b.getUserId(), b.getTrainId(), b.getJourneyDate(), b.getPassengerName(), b.getPassengerAge(), b.getSeatNumber(), b.getStatus());
+
+    private BookingResponse toResponse(Booking booking) {
+
+        return new BookingResponse(
+                booking.getId(),
+                booking.getTrainId(),
+                booking.getJourneyDate(),
+                booking.getPassengerName(),
+                booking.getPassengerAge(),
+                booking.getSeatNumber(),
+                booking.getStatus()
+        );
     }
 }

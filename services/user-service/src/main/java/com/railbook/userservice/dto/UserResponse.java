@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 
 public record UserResponse(
         Long id,
-        String name,
+        String firstName,
+        String lastName,
         String email,
         String phone,
         LocalDateTime createdAt,

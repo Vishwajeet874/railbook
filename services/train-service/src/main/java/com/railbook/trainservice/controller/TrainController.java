@@ -5,6 +5,7 @@ import com.railbook.trainservice.dto.TrainResponse;
 import com.railbook.trainservice.service.TrainService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TrainController {
     private final TrainService trainService;
+
+    @Value("${server.port}")
+    private String port;
+
+    @GetMapping("/test")
+    public String test() {
+        return "Response from Train Service instance running on port: " + port;
+    }
 
     @PostMapping
     public ResponseEntity<TrainResponse> createTrain(@Valid @RequestBody CreateTrainRequest request) {

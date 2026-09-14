@@ -35,11 +35,11 @@ spring:
                       - java.net.ConnectException
                       - io.netty.channel.AbstractChannel$AnnotatedConnectException
                       - java.io.IOException
-                    backoff:
-                      firstBackoff: 100ms
-                      maxBackoff: 1s
-                      factor: 2
-                      basedOnPreviousValue: true
+#                    backoff:
+#                      firstBackoff: 100ms
+#                      maxBackoff: 1s
+#                      factor: 2
+#                      basedOnPreviousValue: true
 
             - id: train-service
               uri: lb://TRAIN-SERVICE
@@ -59,11 +59,11 @@ spring:
                       - java.net.ConnectException
                       - io.netty.channel.AbstractChannel$AnnotatedConnectException
                       - java.io.IOException
-                    backoff:
-                      firstBackoff: 100ms
-                      maxBackoff: 1s
-                      factor: 2
-                      basedOnPreviousValue: true
+#                    backoff:
+#                      firstBackoff: 100ms
+#                      maxBackoff: 1s
+#                      factor: 2
+#                      basedOnPreviousValue: true
 
             - id: booking-service
               uri: lb://BOOKING-SERVICE
@@ -83,11 +83,11 @@ spring:
                       - java.net.ConnectException
                       - io.netty.channel.AbstractChannel$AnnotatedConnectException
                       - java.io.IOException
-                    backoff:
-                      firstBackoff: 100ms
-                      maxBackoff: 1s
-                      factor: 2
-                      basedOnPreviousValue: true
+#                    backoff:
+#                      firstBackoff: 100ms
+#                      maxBackoff: 1s
+#                      factor: 2
+#                      basedOnPreviousValue: true
 
 management:
   endpoints:
@@ -96,6 +96,10 @@ management:
         include: health,info,gateway
 
 resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
   circuitbreaker:
     instances:
       trainServiceCircuitBreaker:
@@ -133,3 +137,9 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    non-secure-port: ${server.port}

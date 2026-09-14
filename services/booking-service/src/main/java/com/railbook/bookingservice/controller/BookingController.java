@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,26 +17,70 @@ import java.util.List;
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
 public class BookingController {
+
     private final BookingService bookingService;
 
+
     @PostMapping
-    public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody CreateBookingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.createBooking(request));
+    public ResponseEntity<BookingResponse> createBooking(
+            @Valid @RequestBody CreateBookingRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String keycloakUserId = jwt.getSubject();
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        bookingService.createBooking(
+                                keycloakUserId,
+                                request
+                        )
+                );
     }
+
+
+    @GetMapping("/me")
+    public ResponseEntity<List<BookingResponse>> getMyBookings(
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String keycloakUserId = jwt.getSubject();
+
+        return ResponseEntity.ok(
+                bookingService.getBookingsByUser(
+                        keycloakUserId
+                )
+        );
+    }
+
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingResponse> getBooking(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.getBooking(id));
+    public ResponseEntity<BookingResponse> getBooking(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String keycloakUserId = jwt.getSubject();
+
+        return ResponseEntity.ok(
+                bookingService.getBooking(
+                        id,
+                        keycloakUserId
+                )
+        );
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<BookingResponse>> getBookingsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(bookingService.getBookingsByUser(userId));
-    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelBooking(@PathVariable Long id) {
-        bookingService.cancelBooking(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> cancelBooking(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String keycloakUserId = jwt.getSubject();
+
+        bookingService.cancelBooking(
+                id,
+                keycloakUserId
+        );
+
+        return ResponseEntity.ok("Booking cancelled successfully");
     }
 }

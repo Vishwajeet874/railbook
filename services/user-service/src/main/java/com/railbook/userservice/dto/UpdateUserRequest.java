@@ -4,8 +4,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 public record UpdateUserRequest(
-        @Size(max = 100, message = "Name must not exceed 100 characters")
-        String name,
+        @Size(max = 100, message = "FirstName must not exceed 100 characters")
+        String firstName,
+
+        @Size(max = 100, message = "FirstName must not exceed 100 characters")
+        String lastName,
 
         @Email(message = "Email must be valid")
         @Size(max = 150, message = "Email must not exceed 150 characters")

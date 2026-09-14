@@ -15,9 +15,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/RailBook
 server:
   port: 8081
+
+# Keycloak Admin Client Configuration
+keycloak:
+  server-url: http://localhost:8080
+  realm: RailBook
+  client-id: railbook-user-service
+  client-secret: mIxhI2foL3OE2ojHW21JKwHI8rscuf1deergijl7cwCofmeOdSLF5vZUvNriMig8INAcjB98wWG8PQvUI8MdB9
 
 management:
   endpoints:
@@ -29,8 +40,11 @@ management:
     health:
       show-details: always
 
-
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    non-secure-port: ${server.port}

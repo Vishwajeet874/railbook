@@ -6,7 +6,15 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "bookings")
+@Table(
+        name = "bookings",
+        indexes = {
+                @Index(
+                        name = "idx_booking_keycloak_user",
+                        columnList = "keycloak_user_id"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,8 +24,9 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
-    private Long userId;
+    @Column(name = "keycloak_user_id", nullable = false, length = 100)
+    private String keycloakUserId;
+
     @Column(nullable = false)
     private Long trainId;
     @Column(nullable = false)

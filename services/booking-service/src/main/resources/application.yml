@@ -13,6 +13,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/RailBook
 server:
   port: 8083
 management:
@@ -87,3 +92,7 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    non-secure-port: ${server.port}
