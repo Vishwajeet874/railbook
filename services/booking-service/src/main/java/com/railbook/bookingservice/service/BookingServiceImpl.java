@@ -5,6 +5,8 @@ import com.railbook.bookingservice.dto.BookingResponse;
 import com.railbook.bookingservice.dto.CreateBookingRequest;
 import com.railbook.bookingservice.entity.Booking;
 import com.railbook.bookingservice.entity.BookingStatus;
+import com.railbook.bookingservice.event.BookingCreatedEvent;
+import com.railbook.bookingservice.event.BookingEventProducer;
 import com.railbook.bookingservice.exception.BookingNotFoundException;
 import com.railbook.bookingservice.exception.SeatAlreadyBookedException;
 import com.railbook.bookingservice.repository.BookingRepository;
@@ -18,6 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
+
+    private final BookingEventProducer bookingEventProducer;
 
     private final BookingRepository bookingRepository;
 
@@ -61,9 +65,24 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatus.CONFIRMED)
                 .build();
 
+        Booking savedBooking = bookingRepository.save(booking);
+
+        BookingCreatedEvent event = new BookingCreatedEvent(
+                savedBooking.getId(),
+                savedBooking.getKeycloakUserId(),
+                savedBooking.getTrainId(),
+                savedBooking.getJourneyDate(),
+                savedBooking.getPassengerName(),
+                savedBooking.getPassengerAge(),
+                savedBooking.getSeatNumber(),
+                savedBooking.getStatus().name()
+        );
+
+        bookingEventProducer.publishBookingCreated(event);
+
         // 4. Save
         return toResponse(
-                bookingRepository.save(booking)
+                savedBooking
         );
     }
 
