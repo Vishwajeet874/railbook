@@ -1,0 +1,75 @@
+name: Build and Push RailBook Images to ECR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  AWS_ACCOUNT_ID: "968198282939"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - name: user-service
+            repository: railbook-user-service
+            context: ./services/user-service
+
+          - name: train-service
+            repository: railbook-train-service
+            context: ./services/train-service
+
+          - name: booking-service
+            repository: railbook-booking-service
+            context: ./services/booking-service
+
+          - name: payment-service
+            repository: railbook-payment-service
+            context: ./services/payment-service
+
+          - name: service-registry
+            repository: railbook-service-registry
+            context: ./service-registry
+
+          - name: api-gateway
+            repository: railbook-api-gateway
+            context: ./api-gateway
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::968198282939:role/RailBookGitHubActionsRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service.context }}
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ matrix.service.repository }}:latest
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ matrix.service.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
