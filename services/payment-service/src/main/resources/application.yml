@@ -1,13 +1,16 @@
 server:
   port: 8085
+
 spring:
   application:
     name: PAYMENT-SERVICE
+
   datasource:
-    url: jdbc:mysql://localhost:3306/railbook_payment
-    username: root
-    password: root@123
+    url: ${DB_URL:jdbc:mysql://localhost:3306/railbook_payment}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root@123}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,10 +18,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
       group-id: payment-service
       auto-offset-reset: earliest
       key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
@@ -29,9 +37,15 @@ spring:
         spring.json.value.default.type: com.railbook.paymentservice.event.BookingCreatedEvent
         spring.json.trusted.packages: com.railbook.paymentservice.event
         spring.json.use.type.headers: false
+
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
   instance:
     prefer-ip-address: true
+
+payment:
+  simulation:
+    result: ${PAYMENT_SIMULATION_RESULT:SUCCESS}

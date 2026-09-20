@@ -3,9 +3,9 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/railbook_user_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: root@123
+    url: ${DB_URL:jdbc:mysql://localhost:3306/railbook_user_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root@123}
 
   jpa:
     hibernate:
@@ -15,20 +15,25 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/RailBook
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/RailBook}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/RailBook/protocol/openid-connect/certs}
+
+
 server:
   port: 8081
 
-# Keycloak Admin Client Configuration
+
 keycloak:
-  server-url: http://localhost:8080
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
   realm: RailBook
   client-id: railbook-user-service
-  client-secret: mIxhI2foL3OE2ojHW21JKwHI8rscuf1deergijl7cwCofmeOdSLF5vZUvNriMig8INAcjB98wWG8PQvUI8MdB9
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
+
 
 management:
   endpoints:
@@ -40,11 +45,11 @@ management:
     health:
       show-details: always
 
+
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
-    non-secure-port: ${server.port}

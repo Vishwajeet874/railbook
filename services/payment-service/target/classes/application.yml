@@ -17,8 +17,12 @@ spring:
         format_sql: true
   kafka:
     bootstrap-servers: localhost:9092
-    consumer:
 
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
       group-id: payment-service
       auto-offset-reset: earliest
       key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer

@@ -1,10 +1,12 @@
 spring:
   application:
     name: booking-service
+
   datasource:
-    url: jdbc:mysql://localhost:3306/railbook_booking_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: root@123
+    url: ${DB_URL:jdbc:mysql://localhost:3306/railbook_booking}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root@123}
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -13,13 +15,19 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/RailBook
+          # Must match the "iss" claim inside the JWT
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/RailBook}
+
+          # Allows Dockerized Booking Service to reach Keycloak
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/RailBook/protocol/openid-connect/certs}
+
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -32,30 +40,39 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: com.railbook.bookingservice.event
+
+
 server:
   port: 8083
+
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
+
   endpoint:
     health:
       show-details: always
+
   health:
     circuit-breakers:
       enabled: true
 
+
 services:
   train-service:
-    url: http://localhost:8082
+    url: ${TRAIN_SERVICE_URL:http://localhost:8082}
 
   user-service:
-    url: http://localhost:8081
+    url: ${USER_SERVICE_URL:http://localhost:8081}
+
 
 resilience4j:
   circuitbreaker:
     instances:
+
       user-service:
         register-health-indicator: true
         sliding-window-size: 10
@@ -66,6 +83,7 @@ resilience4j:
         automatic-transition-from-open-to-half-open-enabled: true
         ignoreExceptions:
           - org.springframework.web.client.HttpClientErrorException.NotFound
+
       train-service:
         register-health-indicator: true
         sliding-window-size: 10
@@ -76,37 +94,42 @@ resilience4j:
         automatic-transition-from-open-to-half-open-enabled: true
         ignoreExceptions:
           - org.springframework.web.client.HttpClientErrorException.NotFound
+
     circuit-breaker-aspect-order: 1
+
 
   retry:
     instances:
+
       user-service:
-        maxAttempts: 3            # Total calls (1 initial + 2 retries)
-        waitDuration: 1s          # Wait 1s between attempts
+        maxAttempts: 3
+        waitDuration: 1s
         enableExponentialBackoff: true
-        exponentialBackoffMultiplier: 2 # 1st retry after 1s, 2nd retry after 2s
+        exponentialBackoffMultiplier: 2
         retryExceptions:
           - org.springframework.web.client.RestClientException
           - java.io.IOException
         ignoreExceptions:
           - org.springframework.web.client.HttpClientErrorException.NotFound
+
       train-service:
-        maxAttempts: 3            # Total calls (1 initial + 2 retries)
-        waitDuration: 1s          # Wait 1s between attempts
+        maxAttempts: 3
+        waitDuration: 1s
         enableExponentialBackoff: true
-        exponentialBackoffMultiplier: 2 # 1st retry after 1s, 2nd retry after 2s
+        exponentialBackoffMultiplier: 2
         retryExceptions:
           - org.springframework.web.client.RestClientException
           - java.io.IOException
         ignoreExceptions:
           - org.springframework.web.client.HttpClientErrorException.NotFound
+
     retry-aspect-order: 2
+
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
-    non-secure-port: ${server.port}

@@ -3,9 +3,9 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/railbook_user_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: username
-    password: password
+    url: jdbc:mysql://localhost:3306/railbook_user_db
+    username: root
+    password: root@123
 
   jpa:
     hibernate:
@@ -28,7 +28,7 @@ keycloak:
   server-url: http://localhost:8080
   realm: RailBook
   client-id: railbook-user-service
-  client-secret: secret in keycloak
+  client-secret: mIxhI2foL3OE2ojHW21JKwHI8rscuf1deergijl7cwCofmeOdSLF5vZUvNriMig8INAcjB98wWG8PQvUI8MdB9
 
 management:
   endpoints:

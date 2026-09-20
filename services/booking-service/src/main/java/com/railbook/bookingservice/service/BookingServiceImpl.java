@@ -40,11 +40,14 @@ public class BookingServiceImpl implements BookingService {
         // 2. Check whether seat is already booked
         boolean seatBooked =
                 bookingRepository
-                        .existsByTrainIdAndJourneyDateAndSeatNumberAndStatus(
+                        .existsByTrainIdAndJourneyDateAndSeatNumberAndStatusIn(
                                 request.trainId(),
                                 request.journeyDate(),
                                 request.seatNumber(),
-                                BookingStatus.CONFIRMED
+                                List.of(
+                                        BookingStatus.PENDING_PAYMENT,
+                                        BookingStatus.CONFIRMED
+                                )
                         );
 
         if (seatBooked) {
@@ -62,7 +65,7 @@ public class BookingServiceImpl implements BookingService {
                 .passengerName(request.passengerName())
                 .passengerAge(request.passengerAge())
                 .seatNumber(request.seatNumber())
-                .status(BookingStatus.CONFIRMED)
+                .status(BookingStatus.PENDING_PAYMENT)
                 .build();
 
         Booking savedBooking = bookingRepository.save(booking);

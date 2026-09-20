@@ -14,6 +14,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println(">>> RAILBOOK SECURITY CONFIG LOADED <<<");
         http
                 // 1. Disable CSRF for REST APIs (handled via stateless JWT tokens)
                 .csrf(csrf -> csrf.disable())
