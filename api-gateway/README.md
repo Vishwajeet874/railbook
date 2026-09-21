@@ -2,7 +2,7 @@
 
 Spring Boot 4.0.7 + Spring Cloud Gateway.
 
-Gateway: 8080
+Gateway: 9090
 User: 8081
 Train: 8082
 Booking: 8083
